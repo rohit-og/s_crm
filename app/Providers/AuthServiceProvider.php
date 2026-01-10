@@ -73,6 +73,14 @@ class AuthServiceProvider extends ServiceProvider
         'App\Models\ServiceJob' => 'App\Policies\ServiceJobPolicy',
         'App\Models\Booking' => 'App\Policies\BookingPolicy',
 
+        // CRM
+        'App\Models\Pipeline' => 'App\Policies\PipelinePolicy',
+        'App\Models\Deal' => 'App\Policies\DealPolicy',
+        'App\Models\Followup' => 'App\Policies\FollowupPolicy',
+        'App\Models\CrmForm' => 'App\Policies\CrmFormPolicy',
+        'App\Models\ContactGroup' => 'App\Policies\ContactGroupPolicy',
+        'App\Models\Tag' => 'App\Policies\TagPolicy',
+
     ];
 
     /**

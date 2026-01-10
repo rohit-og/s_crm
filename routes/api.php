@@ -801,6 +801,64 @@ Route::middleware(['auth:api', 'Is_Active', 'request.safety', 'token.timeout'])-
 
 });
 
+// CRM Module Routes
+Route::prefix('crm')->middleware(['auth:api', 'Is_Active', 'request.safety'])->group(function () {
+    // Pipelines
+    Route::resource('pipelines', 'Crm\PipelineController');
+    Route::post('pipelines/{id}/reorder-stages', 'Crm\PipelineController@reorderStages');
+    
+    // Pipeline Stages
+    Route::get('pipelines/{pipelineId}/stages', 'Crm\PipelineStageController@index');
+    Route::resource('pipeline-stages', 'Crm\PipelineStageController')->except(['index']);
+    Route::post('pipeline-stages/{id}/reorder', 'Crm\PipelineStageController@reorder');
+    
+    // Deals
+    Route::resource('deals', 'Crm\DealController');
+    Route::post('deals/{id}/move-stage', 'Crm\DealController@moveToStage');
+    Route::post('deals/{id}/assign', 'Crm\DealController@assign');
+    Route::get('deals/filter/by-stage/{stageId}', 'Crm\DealController@byStage');
+    Route::get('deals/filter/by-agent/{userId}', 'Crm\DealController@byAgent');
+    
+    // Followups
+    Route::resource('followups', 'Crm\FollowupController');
+    Route::post('followups/{id}/complete', 'Crm\FollowupController@markComplete');
+    Route::get('followups/scheduled', 'Crm\FollowupController@scheduled');
+    Route::get('deals/{dealId}/followups', 'Crm\FollowupController@byDeal');
+    Route::get('clients/{clientId}/followups', 'Crm\FollowupController@byClient');
+    
+    // Forms
+    Route::resource('forms', 'Crm\FormBuilderController');
+    Route::post('forms/{id}/publish', 'Crm\FormBuilderController@publish');
+    Route::post('forms/{id}/duplicate', 'Crm\FormBuilderController@duplicate');
+    
+    // Form Submissions
+    Route::get('forms/{formId}/submissions', 'Crm\FormSubmissionController@index');
+    Route::get('form-submissions/{id}', 'Crm\FormSubmissionController@show');
+    Route::delete('form-submissions/{id}', 'Crm\FormSubmissionController@destroy');
+    Route::post('form-submissions/{id}/match-contact', 'Crm\FormSubmissionController@matchToContact');
+    
+    // Contact Groups
+    Route::resource('contact-groups', 'Crm\ContactGroupController');
+    Route::post('contact-groups/{id}/add-contacts', 'Crm\ContactGroupController@addContacts');
+    Route::post('contact-groups/{id}/remove-contacts', 'Crm\ContactGroupController@removeContacts');
+    
+    // Tags
+    Route::resource('tags', 'Crm\TagController');
+    Route::post('tags/{id}/attach-contact', 'Crm\TagController@attachToContact');
+    Route::post('tags/{id}/detach-contact', 'Crm\TagController@detachFromContact');
+    
+    // CRM Contacts (extended Client functionality)
+    Route::get('contacts', 'Crm\ContactController@index');
+    Route::get('contacts/{id}', 'Crm\ContactController@show');
+    Route::put('contacts/{id}', 'Crm\ContactController@update');
+    Route::post('contacts/{id}/assign-agent', 'Crm\ContactController@assignAgent');
+    Route::post('contacts/{id}/add-to-group', 'Crm\ContactController@addToGroup');
+    Route::post('contacts/{id}/add-tags', 'Crm\ContactController@addTags');
+});
+
+// Public form submission endpoint (no auth required)
+Route::post('crm/forms/{formId}/submit', 'Crm\FormSubmissionController@store');
+
 // NEW FEATURE - SAFE ADDITION: Accounting V2 (isolated routes)
 Route::middleware(['auth:api', 'Is_Active', 'request.safety'])->group(function () {
     Route::prefix('accounting/v2')->group(function () {

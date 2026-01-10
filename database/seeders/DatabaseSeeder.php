@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             UserRoleSeeder::class,
             PermissionRoleSeeder::class,
+            CrmPermissionsSeeder::class, // Add CRM permissions after main permissions
             Warehouse::class,
             StoreSettingSeeder::class,
         ]);

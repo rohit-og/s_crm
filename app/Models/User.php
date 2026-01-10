@@ -93,4 +93,46 @@ class User extends Authenticatable
         
         return false;
     }
+
+    /**
+     * Check if user is a CRM agent (has 'crm_agent' role)
+     * 
+     * @return bool
+     */
+    public function isCrmAgent()
+    {
+        return $this->hasRole('crm_agent');
+    }
+
+    /**
+     * Get all deals assigned to this user
+     */
+    public function assignedDeals()
+    {
+        return $this->hasMany(Deal::class, 'assigned_to');
+    }
+
+    /**
+     * Get all deals created by this user
+     */
+    public function createdDeals()
+    {
+        return $this->hasMany(Deal::class, 'created_by');
+    }
+
+    /**
+     * Get all followups assigned to this user
+     */
+    public function assignedFollowups()
+    {
+        return $this->hasMany(Followup::class, 'assigned_to');
+    }
+
+    /**
+     * Get all clients assigned to this user as agent
+     */
+    public function assignedClients()
+    {
+        return $this->hasMany(Client::class, 'assigned_agent_id');
+    }
 }
