@@ -8,8 +8,8 @@
         <div v-else>
             <!-- View Toggle -->
             <div class="mb-3 d-flex justify-content-between align-items-center">
-                <div>
-                    <b-button-group>
+                <div class="d-flex align-items-center">
+                    <b-button-group class="mr-3">
                         <b-button
                             :variant="
                                 viewMode === 'list'
@@ -31,6 +31,21 @@
                             <i class="i-Columns"></i> {{ $t("Kanban") }}
                         </b-button>
                     </b-button-group>
+                    <!-- Pipeline Selector for Kanban View -->
+                    <div
+                        v-if="viewMode === 'kanban'"
+                        class="mr-3"
+                        style="min-width: 250px"
+                    >
+                        <v-select
+                            v-model="selectedPipeline"
+                            :options="pipelines"
+                            label="name"
+                            :reduce="(option) => option.id"
+                            :placeholder="$t('Select_Pipeline')"
+                            @input="onPipelineChange"
+                        />
+                    </div>
                 </div>
                 <div>
                     <b-button
@@ -232,7 +247,10 @@
                     </div>
                 </div>
             </div>
-            <div v-else-if="viewMode === 'kanban'" class="alert alert-info">
+            <div
+                v-else-if="viewMode === 'kanban' && !selectedPipeline"
+                class="alert alert-info"
+            >
                 {{ $t("Please_select_a_pipeline_to_view_kanban") }}
             </div>
 
@@ -280,7 +298,7 @@
 <script>
 import { mapGetters } from "vuex";
 import NProgress from "nprogress";
-import axios from "axios";
+// Use window.axios which has baseURL configured in main.js
 
 export default {
     name: "crm-deals",
@@ -478,7 +496,9 @@ export default {
             if (this.filterStatus) params.status = this.filterStatus;
 
             try {
-                const response = await axios.get("crm/deals", { params });
+                const response = await window.axios.get("crm/deals", {
+                    params,
+                });
                 this.deals = response.data.deals || response.data.data || [];
                 this.totalRows =
                     response.data.totalRows || response.data.total || 0;
@@ -496,7 +516,7 @@ export default {
         },
         async Fetch_Pipelines() {
             try {
-                const response = await axios.get("crm/pipelines", {
+                const response = await window.axios.get("crm/pipelines", {
                     params: { limit: -1 },
                 });
                 this.pipelines =
@@ -511,7 +531,7 @@ export default {
         },
         async Fetch_Pipeline_Stages(pipelineId) {
             try {
-                const response = await axios.get(
+                const response = await window.axios.get(
                     `crm/pipelines/${pipelineId}/stages`
                 );
                 this.stages = response.data.stages || response.data.data || [];
@@ -520,6 +540,15 @@ export default {
                 }
             } catch (error) {
                 console.error("Error fetching stages:", error);
+            }
+        },
+        async onPipelineChange(pipelineId) {
+            if (pipelineId) {
+                this.filterPipeline = pipelineId;
+                await this.Fetch_Pipeline_Stages(pipelineId);
+            } else {
+                this.selectedPipeline = null;
+                this.stages = [];
             }
         },
         Remove_Deal(id) {
@@ -535,7 +564,7 @@ export default {
             }).then((result) => {
                 if (result.value) {
                     NProgress.start();
-                    axios
+                    window.axios
                         .delete("crm/deals/" + id)
                         .then(() => {
                             this.$swal(

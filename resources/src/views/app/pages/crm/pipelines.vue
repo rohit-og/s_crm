@@ -112,7 +112,6 @@
 <script>
 import { mapGetters } from "vuex";
 import NProgress from "nprogress";
-import axios from "axios";
 
 export default {
     name: "crm-pipelines",
@@ -226,7 +225,7 @@ export default {
         Get_Pipelines(page) {
             NProgress.start();
             NProgress.set(0.1);
-            axios
+            window.axios
                 .get(
                     "crm/pipelines?page=" +
                         page +
@@ -268,7 +267,7 @@ export default {
                 if (result.value) {
                     NProgress.start();
                     NProgress.set(0.1);
-                    axios
+                    window.axios
                         .delete("crm/pipelines/" + id)
                         .then(() => {
                             this.$swal(

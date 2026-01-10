@@ -2200,81 +2200,185 @@ const baseRoutes = [
                         /* webpackChunkName: "profile" */ "./views/app/pages/profile"
                     ),
             },
-        ],
-    },
 
-    // CRM Module
-    {
-        path: "/app/crm",
-        component: () =>
-            import(
-                /* webpackChunkName: "crm" */ "./views/app/pages/crm/layout"
-            ),
-        redirect: "/app/crm/dashboard",
-        children: [
+            // CRM Module
             {
-                path: "dashboard",
-                name: "crm-dashboard",
+                path: "/app/crm",
                 component: () =>
                     import(
-                        /* webpackChunkName: "crm-dashboard" */ "./views/app/pages/crm/index"
+                        /* webpackChunkName: "crm" */ "./views/app/pages/crm/layout"
                     ),
-            },
-            {
-                path: "pipelines",
-                name: "crm-pipelines",
-                component: () =>
-                    import(
-                        /* webpackChunkName: "crm-pipelines" */ "./views/app/pages/crm/pipelines"
-                    ),
-            },
-            {
-                path: "deals",
-                name: "crm-deals",
-                component: () =>
-                    import(
-                        /* webpackChunkName: "crm-deals" */ "./views/app/pages/crm/deals"
-                    ),
-            },
-            {
-                path: "followups",
-                name: "crm-followups",
-                component: () =>
-                    import(
-                        /* webpackChunkName: "crm-followups" */ "./views/app/pages/crm/followups"
-                    ),
-            },
-            {
-                path: "forms",
-                name: "crm-forms",
-                component: () =>
-                    import(
-                        /* webpackChunkName: "crm-forms" */ "./views/app/pages/crm/forms"
-                    ),
-            },
-            {
-                path: "contacts",
-                name: "crm-contacts",
-                component: () =>
-                    import(
-                        /* webpackChunkName: "crm-contacts" */ "./views/app/pages/crm/contacts"
-                    ),
-            },
-            {
-                path: "groups",
-                name: "crm-groups",
-                component: () =>
-                    import(
-                        /* webpackChunkName: "crm-groups" */ "./views/app/pages/crm/groups"
-                    ),
-            },
-            {
-                path: "tags",
-                name: "crm-tags",
-                component: () =>
-                    import(
-                        /* webpackChunkName: "crm-tags" */ "./views/app/pages/crm/tags"
-                    ),
+                redirect: "/app/crm/dashboard",
+                children: [
+                    {
+                        path: "dashboard",
+                        name: "crm-dashboard",
+                        component: () =>
+                            import(
+                                /* webpackChunkName: "crm-dashboard" */ "./views/app/pages/crm/index"
+                            ),
+                    },
+                    {
+                        path: "pipelines",
+                        name: "crm-pipelines",
+                        component: () =>
+                            import(
+                                /* webpackChunkName: "crm-pipelines" */ "./views/app/pages/crm/pipelines"
+                            ),
+                    },
+                    {
+                        path: "pipelines/create",
+                        name: "crm_pipeline_create",
+                        component: () =>
+                            import(
+                                /* webpackChunkName: "crm-pipeline-create" */ "./views/app/pages/crm/pipelines/CreatePipeline"
+                            ),
+                    },
+                    {
+                        path: "pipelines/edit/:id",
+                        name: "crm_pipeline_edit",
+                        component: () =>
+                            import(
+                                /* webpackChunkName: "crm-pipeline-edit" */ "./views/app/pages/crm/pipelines/CreatePipeline"
+                            ),
+                    },
+                    {
+                        path: "pipelines/:id/stages",
+                        name: "crm_pipeline_stages",
+                        component: () =>
+                            import(
+                                /* webpackChunkName: "crm-pipeline-stages" */ "./views/app/pages/crm/pipelines/Stages"
+                            ),
+                    },
+                    {
+                        path: "deals",
+                        name: "crm-deals",
+                        component: () =>
+                            import(
+                                /* webpackChunkName: "crm-deals" */ "./views/app/pages/crm/deals"
+                            ),
+                    },
+                    {
+                        path: "deals/create",
+                        name: "crm_deal_create",
+                        component: () =>
+                            import(
+                                /* webpackChunkName: "crm-deal-create" */ "./views/app/pages/crm/deals/CreateDeal"
+                            ),
+                    },
+                    {
+                        path: "deals/edit/:id",
+                        name: "crm_deal_edit",
+                        component: () =>
+                            import(
+                                /* webpackChunkName: "crm-deal-edit" */ "./views/app/pages/crm/deals/CreateDeal"
+                            ),
+                    },
+                    {
+                        path: "deals/:id",
+                        name: "crm-deal-detail",
+                        component: () =>
+                            import(
+                                /* webpackChunkName: "crm-deal-detail" */ "./views/app/pages/crm/deals/DealDetail"
+                            ),
+                    },
+                    {
+                        path: "followups",
+                        name: "crm-followups",
+                        component: () =>
+                            import(
+                                /* webpackChunkName: "crm-followups" */ "./views/app/pages/crm/followups"
+                            ),
+                    },
+                    {
+                        path: "followups/create",
+                        name: "crm-followup-create",
+                        component: () =>
+                            import(
+                                /* webpackChunkName: "crm-followup-create" */ "./views/app/pages/crm/followups/CreateFollowup"
+                            ),
+                    },
+                    {
+                        path: "followups/edit/:id",
+                        name: "crm-followup-edit",
+                        component: () =>
+                            import(
+                                /* webpackChunkName: "crm-followup-edit" */ "./views/app/pages/crm/followups/CreateFollowup"
+                            ),
+                    },
+                    {
+                        path: "followups/:id",
+                        name: "crm-followup-detail",
+                        component: () =>
+                            import(
+                                /* webpackChunkName: "crm-followup-detail" */ "./views/app/pages/crm/followups/FollowupDetail"
+                            ),
+                    },
+                    {
+                        path: "forms",
+                        name: "crm-forms",
+                        component: () =>
+                            import(
+                                /* webpackChunkName: "crm-forms" */ "./views/app/pages/crm/forms"
+                            ),
+                    },
+                    {
+                        path: "forms/builder/:id",
+                        name: "crm-form-builder",
+                        component: () =>
+                            import(
+                                /* webpackChunkName: "crm-form-builder" */ "./views/app/pages/crm/forms/FormBuilder"
+                            ),
+                    },
+                    {
+                        path: "forms/:formId/submissions",
+                        name: "crm-form-submissions",
+                        component: () =>
+                            import(
+                                /* webpackChunkName: "crm-form-submissions" */ "./views/app/pages/crm/forms/Submissions"
+                            ),
+                    },
+                    {
+                        path: "submissions/:id",
+                        name: "crm-submission-detail",
+                        component: () =>
+                            import(
+                                /* webpackChunkName: "crm-submission-detail" */ "./views/app/pages/crm/forms/SubmissionDetail"
+                            ),
+                    },
+                    {
+                        path: "contacts",
+                        name: "crm-contacts",
+                        component: () =>
+                            import(
+                                /* webpackChunkName: "crm-contacts" */ "./views/app/pages/crm/contacts"
+                            ),
+                    },
+                    {
+                        path: "contacts/:id",
+                        name: "crm-contact-detail",
+                        component: () =>
+                            import(
+                                /* webpackChunkName: "crm-contact-detail" */ "./views/app/pages/crm/contacts/ContactDetail"
+                            ),
+                    },
+                    {
+                        path: "groups",
+                        name: "crm-groups",
+                        component: () =>
+                            import(
+                                /* webpackChunkName: "crm-groups" */ "./views/app/pages/crm/groups"
+                            ),
+                    },
+                    {
+                        path: "tags",
+                        name: "crm-tags",
+                        component: () =>
+                            import(
+                                /* webpackChunkName: "crm-tags" */ "./views/app/pages/crm/tags"
+                            ),
+                    },
+                ],
             },
         ],
     },
