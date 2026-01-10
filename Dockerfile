@@ -23,7 +23,8 @@ RUN docker-php-ext-install \
     xml \
     gd \
     zip \
-    calendar
+    calendar \
+    bcmath
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
