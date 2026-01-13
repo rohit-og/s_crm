@@ -16,7 +16,7 @@
                                     ? 'primary'
                                     : 'outline-primary'
                             "
-                            @click="viewMode = 'list'"
+                            @click="onViewModeChange('list')"
                         >
                             <i class="i-List"></i> {{ $t("List") }}
                         </b-button>
@@ -26,7 +26,7 @@
                                     ? 'primary'
                                     : 'outline-primary'
                             "
-                            @click="viewMode = 'kanban'"
+                            @click="onViewModeChange('kanban')"
                         >
                             <i class="i-Columns"></i> {{ $t("Kanban") }}
                         </b-button>
@@ -327,6 +327,8 @@ export default {
                 { label: "Closed Lost", value: "closed_lost" },
             ],
             draggedDealId: null,
+            currentPipelineId: null, // Track current pipeline to prevent unnecessary fetches
+            isFetchingDeals: false, // Guard to prevent concurrent fetches
         };
     },
     computed: {
@@ -483,6 +485,11 @@ export default {
             this.Get_Deals(this.serverParams.page);
         },
         async Get_Deals(page) {
+            // Prevent concurrent fetches
+            if (this.isFetchingDeals) {
+                return;
+            }
+            this.isFetchingDeals = true;
             NProgress.start();
             NProgress.set(0.1);
             const params = {
@@ -492,7 +499,12 @@ export default {
                 search: this.search || "",
                 limit: this.limit,
             };
-            if (this.filterPipeline) params.pipeline_id = this.filterPipeline;
+            // Use selectedPipeline for kanban view, filterPipeline for list view
+            const pipelineId =
+                this.viewMode === "kanban"
+                    ? this.selectedPipeline
+                    : this.filterPipeline;
+            if (pipelineId) params.pipeline_id = pipelineId;
             if (this.filterStatus) params.status = this.filterStatus;
 
             try {
@@ -502,16 +514,12 @@ export default {
                 this.deals = response.data.deals || response.data.data || [];
                 this.totalRows =
                     response.data.totalRows || response.data.total || 0;
-
-                // If kanban view and pipeline selected, fetch stages
-                if (this.viewMode === "kanban" && this.filterPipeline) {
-                    await this.Fetch_Pipeline_Stages(this.filterPipeline);
-                }
             } catch (error) {
                 console.error("Error fetching deals:", error);
             } finally {
                 NProgress.done();
                 this.isLoading = false;
+                this.isFetchingDeals = false;
             }
         },
         async Fetch_Pipelines() {
@@ -530,25 +538,45 @@ export default {
             }
         },
         async Fetch_Pipeline_Stages(pipelineId) {
+            // Only fetch if pipeline changed or stages not loaded
+            if (
+                this.currentPipelineId === pipelineId &&
+                this.stages.length > 0
+            ) {
+                return;
+            }
+            this.currentPipelineId = pipelineId;
             try {
                 const response = await window.axios.get(
                     `crm/pipelines/${pipelineId}/stages`
                 );
                 this.stages = response.data.stages || response.data.data || [];
-                if (this.viewMode === "kanban") {
+                // Only fetch deals if in kanban view and we have a pipeline selected
+                // This ensures deals are loaded when pipeline/stages change
+                if (this.viewMode === "kanban" && pipelineId) {
                     await this.Get_Deals(this.serverParams.page);
                 }
             } catch (error) {
                 console.error("Error fetching stages:", error);
             }
         },
+        async onViewModeChange(mode) {
+            this.viewMode = mode;
+            // When switching to kanban view, fetch stages if pipeline is selected
+            if (mode === "kanban" && this.selectedPipeline) {
+                await this.Fetch_Pipeline_Stages(this.selectedPipeline);
+            }
+        },
         async onPipelineChange(pipelineId) {
             if (pipelineId) {
                 this.filterPipeline = pipelineId;
+                this.selectedPipeline = pipelineId;
                 await this.Fetch_Pipeline_Stages(pipelineId);
             } else {
                 this.selectedPipeline = null;
+                this.filterPipeline = null;
                 this.stages = [];
+                this.currentPipelineId = null;
             }
         },
         Remove_Deal(id) {

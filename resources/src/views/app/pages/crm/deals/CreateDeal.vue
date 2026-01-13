@@ -456,7 +456,7 @@ export default {
                     this.SubmitProcessing = false;
                     NProgress.done();
                     this.$router.push({
-                        name: "crm-deal-detail",
+                        name: "crm_deal_detail",
                         params: {
                             id: response.data.deal?.id || response.data.id,
                         },
@@ -503,7 +503,7 @@ export default {
                     this.SubmitProcessing = false;
                     NProgress.done();
                     this.$router.push({
-                        name: "crm-deal-detail",
+                        name: "crm_deal_detail",
                         params: { id: this.deal.id },
                     });
                 })

@@ -2276,7 +2276,7 @@ const baseRoutes = [
                     },
                     {
                         path: "deals/:id",
-                        name: "crm-deal-detail",
+                        name: "crm_deal_detail",
                         component: () =>
                             import(
                                 /* webpackChunkName: "crm-deal-detail" */ "./views/app/pages/crm/deals/DealDetail"

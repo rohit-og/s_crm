@@ -485,7 +485,7 @@ export default {
             const clientId = this.$route.query.client_id;
             if (dealId) {
                 this.$router.push({
-                    name: "crm-deal-detail",
+                    name: "crm_deal_detail",
                     params: { id: dealId },
                 });
             } else if (clientId) {

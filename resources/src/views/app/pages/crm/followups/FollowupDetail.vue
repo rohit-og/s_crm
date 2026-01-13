@@ -160,7 +160,7 @@
                                     <th>
                                         <router-link
                                             :to="{
-                                                name: 'crm-deal-detail',
+                                                name: 'crm_deal_detail',
                                                 params: {
                                                     id: followup.deal.id,
                                                 },
@@ -244,7 +244,7 @@
                             block
                             class="mb-2"
                             :to="{
-                                name: 'crm-deal-detail',
+                                name: 'crm_deal_detail',
                                 params: { id: followup.deal.id },
                             }"
                         >
@@ -421,7 +421,7 @@ export default {
             const clientId = this.$route.query.client_id;
             if (dealId) {
                 this.$router.push({
-                    name: "crm-deal-detail",
+                    name: "crm_deal_detail",
                     params: { id: dealId },
                 });
             } else if (clientId) {

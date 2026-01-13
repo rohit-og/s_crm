@@ -11,7 +11,7 @@
                 <h6 class="card-title mb-0 flex-grow-1">
                     <router-link
                         :to="{
-                            name: 'crm-deal-detail',
+                            name: 'crm_deal_detail',
                             params: { id: deal.id },
                         }"
                         class="text-dark"
@@ -31,7 +31,7 @@
                     <b-dropdown-item
                         v-if="canView"
                         :to="{
-                            name: 'crm-deal-detail',
+                            name: 'crm_deal_detail',
                             params: { id: deal.id },
                         }"
                     >
@@ -98,7 +98,7 @@
 
             <router-link
                 :to="{
-                    name: 'crm-deal-detail',
+                    name: 'crm_deal_detail',
                     params: { id: deal.id },
                 }"
                 class="btn btn-sm btn-outline-primary btn-block mt-2"

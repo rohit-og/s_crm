@@ -269,7 +269,7 @@
                                                 <h6 class="mb-1">
                                                     <router-link
                                                         :to="{
-                                                            name: 'crm-deal-detail',
+                                                            name: 'crm_deal_detail',
                                                             params: {
                                                                 id: deal.id,
                                                             },
