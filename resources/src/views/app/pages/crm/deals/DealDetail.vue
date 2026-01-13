@@ -5,6 +5,16 @@
             v-if="isLoading"
             class="loading_page spinner spinner-primary mr-3"
         ></div>
+        <div v-else-if="!deal" class="alert alert-warning">
+            <h5>{{ $t("Error") }}</h5>
+            <p>{{ $t("Deal_not_found_or_failed_to_load") }}</p>
+            <b-button
+                variant="primary"
+                @click="$router.push({ name: 'crm-deals' })"
+            >
+                {{ $t("Back_to_Deals") }}
+            </b-button>
+        </div>
         <div v-else-if="deal">
             <!-- Deal Header -->
             <b-card class="mb-4 shadow-sm">
@@ -141,7 +151,9 @@
                                         {{
                                             formatPriceWithSymbol(
                                                 deal.currency ||
-                                                    currentUser.currency,
+                                                    (currentUser &&
+                                                        currentUser.currency) ||
+                                                    "",
                                                 deal.value,
                                                 2
                                             )
@@ -340,7 +352,10 @@
                             <h4 class="text-primary mb-0">
                                 {{
                                     formatPriceWithSymbol(
-                                        deal.currency || currentUser.currency,
+                                        deal.currency ||
+                                            (currentUser &&
+                                                currentUser.currency) ||
+                                            "",
                                         deal.value,
                                         2
                                     )
@@ -354,7 +369,10 @@
                             <h4 class="text-success mb-0">
                                 {{
                                     formatPriceWithSymbol(
-                                        deal.currency || currentUser.currency,
+                                        deal.currency ||
+                                            (currentUser &&
+                                                currentUser.currency) ||
+                                            "",
                                         (deal.value * (deal.probability || 0)) /
                                             100,
                                         2
@@ -419,7 +437,7 @@
 <script>
 import { mapGetters } from "vuex";
 import NProgress from "nprogress";
-import axios from "axios";
+// Use window.axios which has baseURL configured in main.js
 
 export default {
     name: "crm-deal-detail",
@@ -456,18 +474,26 @@ export default {
             NProgress.start();
             try {
                 const [dealRes, followupsRes] = await Promise.all([
-                    axios.get(`crm/deals/${id}`),
-                    axios.get(`crm/deals/${id}/followups`).catch(() => ({
+                    window.axios.get(`crm/deals/${id}`),
+                    window.axios.get(`crm/deals/${id}/followups`).catch(() => ({
                         data: { followups: [] },
                     })),
                 ]);
 
-                this.deal = dealRes.data.deal || dealRes.data.data;
+                // DealController show() returns the deal directly, not wrapped
+                this.deal =
+                    dealRes.data.deal || dealRes.data.data || dealRes.data;
+
+                // Ensure deal is not null before proceeding
+                if (!this.deal) {
+                    throw new Error("Deal not found");
+                }
+
                 this.followups =
                     followupsRes.data.followups || followupsRes.data.data || [];
 
                 // Fetch stages if pipeline exists
-                if (this.deal.pipeline_id) {
+                if (this.deal && this.deal.pipeline_id) {
                     await this.Fetch_Pipeline_Stages(this.deal.pipeline_id);
                 }
 
@@ -477,22 +503,24 @@ export default {
                 this.isLoading = false;
                 NProgress.done();
             } catch (error) {
+                console.error("Error loading deal:", error);
                 this.makeToast(
                     "danger",
-                    error.response?.data?.message || this.$t("Failed"),
+                    error.response?.data?.message ||
+                        error.message ||
+                        this.$t("Failed_to_load_deal"),
                     this.$t("Error")
                 );
+                this.deal = null; // Ensure deal is null so error message shows
                 this.isLoading = false;
                 NProgress.done();
-                setTimeout(() => {
-                    this.$router.push({ name: "crm-deals" });
-                }, 1500);
+                // Don't auto-redirect, let user see the error and choose to go back
             }
         },
         //---------------------------------------- Fetch Pipeline Stages
         async Fetch_Pipeline_Stages(pipelineId) {
             try {
-                const response = await axios.get(
+                const response = await window.axios.get(
                     `crm/pipelines/${pipelineId}/stages`
                 );
                 this.stages = response.data.stages || response.data.data || [];
@@ -504,8 +532,8 @@ export default {
         //---------------------------------------- Fetch Agents
         async Fetch_Agents() {
             try {
-                const response = await axios.get("users", {
-                    params: { role: "crm_agent", limit: -1 },
+                const response = await window.axios.get("users", {
+                    params: { limit: -1 },
                 });
                 this.agents = response.data.users || response.data.data || [];
             } catch (error) {
@@ -515,6 +543,14 @@ export default {
         },
         //---------------------------------------- Remove Deal
         Remove_Deal() {
+            if (!this.deal || !this.deal.id) {
+                this.makeToast(
+                    "danger",
+                    this.$t("Deal_not_loaded"),
+                    this.$t("Error")
+                );
+                return;
+            }
             this.$swal({
                 title: this.$t("Delete_Title"),
                 text: this.$t("Delete_Text"),
@@ -527,7 +563,7 @@ export default {
             }).then((result) => {
                 if (result.value) {
                     NProgress.start();
-                    axios
+                    window.axios
                         .delete(`crm/deals/${this.deal.id}`)
                         .then(() => {
                             this.$swal(
@@ -550,12 +586,21 @@ export default {
         },
         //---------------------------------------- Show Move Stage Modal
         Show_Move_Stage_Modal() {
+            if (!this.deal) return;
             this.moveStageForm.pipeline_stage_id = this.deal.pipeline_stage_id;
             this.$bvModal.show("moveStageModal");
         },
         //---------------------------------------- Move To Stage
         Move_To_Stage(bvModalEvt) {
             bvModalEvt.preventDefault();
+            if (!this.deal || !this.deal.id) {
+                this.makeToast(
+                    "danger",
+                    this.$t("Deal_not_loaded"),
+                    this.$t("Error")
+                );
+                return;
+            }
             if (!this.moveStageForm.pipeline_stage_id) {
                 this.makeToast(
                     "warning",
@@ -566,7 +611,7 @@ export default {
             }
 
             NProgress.start();
-            axios
+            window.axios
                 .post(`crm/deals/${this.deal.id}/move-stage`, {
                     pipeline_stage_id: this.moveStageForm.pipeline_stage_id,
                 })
@@ -593,14 +638,23 @@ export default {
         },
         //---------------------------------------- Show Assign Modal
         Show_Assign_Modal() {
+            if (!this.deal) return;
             this.assignForm.agent_id = this.deal.assigned_to;
             this.$bvModal.show("assignModal");
         },
         //---------------------------------------- Assign Agent
         Assign_Agent(bvModalEvt) {
             bvModalEvt.preventDefault();
+            if (!this.deal || !this.deal.id) {
+                this.makeToast(
+                    "danger",
+                    this.$t("Deal_not_loaded"),
+                    this.$t("Error")
+                );
+                return;
+            }
             NProgress.start();
-            axios
+            window.axios
                 .post(`crm/deals/${this.deal.id}/assign`, {
                     assigned_to: this.assignForm.agent_id,
                 })
@@ -627,6 +681,14 @@ export default {
         },
         //---------------------------------------- New Followup
         New_Followup() {
+            if (!this.deal || !this.deal.id) {
+                this.makeToast(
+                    "danger",
+                    this.$t("Deal_not_loaded"),
+                    this.$t("Error")
+                );
+                return;
+            }
             this.$router.push({
                 name: "crm-followup-create",
                 query: { deal_id: this.deal.id },

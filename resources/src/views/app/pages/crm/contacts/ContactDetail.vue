@@ -5,6 +5,16 @@
             v-if="isLoading"
             class="loading_page spinner spinner-primary mr-3"
         ></div>
+        <div v-else-if="!contact" class="alert alert-warning">
+            <h5>{{ $t("Error") }}</h5>
+            <p>{{ $t("Contact_not_found_or_failed_to_load") }}</p>
+            <b-button
+                variant="primary"
+                @click="$router.push({ name: 'crm-contacts' })"
+            >
+                {{ $t("Back_to_Contacts") }}
+            </b-button>
+        </div>
         <div v-else-if="contact">
             <!-- Contact Header -->
             <b-card class="mb-4 shadow-sm">
@@ -19,10 +29,20 @@
                                 ><strong>{{ $t("Email") }}:</strong>
                                 {{ contact.email }}</span
                             >
-                            <span class="mr-3" v-if="contact.phone"
+                            <span class="mr-3"
                                 ><strong>{{ $t("Phone") }}:</strong>
-                                {{ contact.phone }}</span
-                            >
+                                <a
+                                    v-if="contact.phone"
+                                    :href="'tel:' + contact.phone"
+                                    class="text-primary ml-1"
+                                >
+                                    <i class="i-Phone mr-1"></i>
+                                    {{ contact.phone }}
+                                </a>
+                                <span v-else class="text-muted ml-1">
+                                    {{ $t("Not_Provided") }}
+                                </span>
+                            </span>
                             <span class="mr-3" v-if="contact.company_name"
                                 ><strong>{{ $t("Company") }}:</strong>
                                 {{ contact.company_name }}</span
@@ -172,7 +192,7 @@
                         <h3 class="mb-0 text-warning">
                             {{
                                 formatPriceWithSymbol(
-                                    currentUser.currency,
+                                    (currentUser && currentUser.currency) || "",
                                     stats.total_value,
                                     2
                                 )
@@ -200,9 +220,21 @@
                                     <td>{{ $t("Email") }}</td>
                                     <th>{{ contact.email }}</th>
                                 </tr>
-                                <tr v-if="contact.phone">
+                                <tr>
                                     <td>{{ $t("Phone") }}</td>
-                                    <th>{{ contact.phone }}</th>
+                                    <th>
+                                        <a
+                                            v-if="contact.phone"
+                                            :href="'tel:' + contact.phone"
+                                            class="text-primary"
+                                        >
+                                            <i class="i-Phone mr-1"></i>
+                                            {{ contact.phone }}
+                                        </a>
+                                        <span v-else class="text-muted">
+                                            {{ $t("Not_Provided") }}
+                                        </span>
+                                    </th>
                                 </tr>
                                 <tr v-if="contact.company_name">
                                     <td>{{ $t("Company") }}</td>
@@ -310,7 +342,9 @@
                                                         {{
                                                             formatPriceWithSymbol(
                                                                 deal.currency ||
-                                                                    currentUser.currency,
+                                                                    (currentUser &&
+                                                                        currentUser.currency) ||
+                                                                    "",
                                                                 deal.value,
                                                                 2
                                                             )
@@ -507,7 +541,7 @@
 <script>
 import { mapGetters } from "vuex";
 import NProgress from "nprogress";
-import axios from "axios";
+// Use window.axios which has baseURL configured in main.js
 import ContactGroupManager from "../../../../../components/crm/ContactGroupManager.vue";
 import ContactTagManager from "../../../../../components/crm/ContactTagManager.vue";
 
@@ -553,20 +587,49 @@ export default {
         async Get_Contact(id) {
             NProgress.start();
             try {
-                const [contactRes, dealsRes, followupsRes] = await Promise.all([
-                    axios.get(`crm/contacts/${id}`),
-                    axios.get(`crm/clients/${id}/followups`).catch(() => ({
-                        data: { deals: [] },
-                    })),
-                    axios.get(`crm/clients/${id}/followups`).catch(() => ({
-                        data: { followups: [] },
-                    })),
+                const [contactRes, followupsRes] = await Promise.all([
+                    window.axios.get(`crm/contacts/${id}`),
+                    window.axios
+                        .get(`crm/clients/${id}/followups`)
+                        .catch(() => ({
+                            data: { followups: [] },
+                        })),
                 ]);
 
-                this.contact = contactRes.data.contact || contactRes.data.data;
-                this.deals = dealsRes.data.deals || dealsRes.data.data || [];
-                this.followups =
-                    followupsRes.data.followups || followupsRes.data.data || [];
+                // ContactController show() returns the contact directly, not wrapped
+                this.contact =
+                    contactRes.data.contact ||
+                    contactRes.data.data ||
+                    contactRes.data;
+
+                // Ensure contact is not null before proceeding
+                if (!this.contact) {
+                    throw new Error("Contact not found");
+                }
+
+                // Contact model has deals relationship loaded from ContactController
+                // Use it if available, otherwise fetch separately
+                if (this.contact.deals && Array.isArray(this.contact.deals)) {
+                    this.deals = this.contact.deals;
+                } else {
+                    // Fallback: fetch deals by filtering (if DealController supports it)
+                    // For now, use empty array since relationship should be loaded
+                    this.deals = [];
+                }
+
+                // Contact model has followups relationship loaded from ContactController
+                // Use it if available, otherwise use the separate API call
+                if (
+                    this.contact.followups &&
+                    Array.isArray(this.contact.followups)
+                ) {
+                    this.followups = this.contact.followups;
+                } else {
+                    this.followups =
+                        followupsRes.data.followups ||
+                        followupsRes.data.data ||
+                        [];
+                }
 
                 // Calculate stats
                 this.stats.total_deals = this.deals.length;
@@ -585,23 +648,25 @@ export default {
                 this.isLoading = false;
                 NProgress.done();
             } catch (error) {
+                console.error("Error loading contact:", error);
                 this.makeToast(
                     "danger",
-                    error.response?.data?.message || this.$t("Failed"),
+                    error.response?.data?.message ||
+                        error.message ||
+                        this.$t("Failed_to_load_contact"),
                     this.$t("Error")
                 );
+                this.contact = null; // Ensure contact is null so error message shows
                 this.isLoading = false;
                 NProgress.done();
-                setTimeout(() => {
-                    this.$router.push({ name: "crm-contacts" });
-                }, 1500);
+                // Don't auto-redirect, let user see the error and choose to go back
             }
         },
         //---------------------------------------- Fetch Agents
         async Fetch_Agents() {
             try {
-                const response = await axios.get("users", {
-                    params: { role: "crm_agent", limit: -1 },
+                const response = await window.axios.get("users", {
+                    params: { limit: -1 },
                 });
                 this.agents = response.data.users || response.data.data || [];
             } catch (error) {
@@ -611,14 +676,23 @@ export default {
         },
         //---------------------------------------- Show Assign Modal
         Show_Assign_Modal() {
+            if (!this.contact) return;
             this.assignForm.agent_id = this.contact.assigned_agent_id;
             this.$bvModal.show("assignModal");
         },
         //---------------------------------------- Assign Agent
         Assign_Agent(bvModalEvt) {
             bvModalEvt.preventDefault();
+            if (!this.contact || !this.contact.id) {
+                this.makeToast(
+                    "danger",
+                    this.$t("Contact_not_loaded"),
+                    this.$t("Error")
+                );
+                return;
+            }
             NProgress.start();
-            axios
+            window.axios
                 .post(`crm/contacts/${this.contact.id}/assign-agent`, {
                     agent_id: this.assignForm.agent_id,
                 })
@@ -653,6 +727,14 @@ export default {
         },
         //---------------------------------------- New Deal
         New_Deal() {
+            if (!this.contact || !this.contact.id) {
+                this.makeToast(
+                    "danger",
+                    this.$t("Contact_not_loaded"),
+                    this.$t("Error")
+                );
+                return;
+            }
             this.$router.push({
                 name: "crm_deal_create",
                 query: { client_id: this.contact.id },
@@ -660,6 +742,14 @@ export default {
         },
         //---------------------------------------- New Followup
         New_Followup() {
+            if (!this.contact || !this.contact.id) {
+                this.makeToast(
+                    "danger",
+                    this.$t("Contact_not_loaded"),
+                    this.$t("Error")
+                );
+                return;
+            }
             this.$router.push({
                 name: "crm-followup-create",
                 query: { client_id: this.contact.id },
