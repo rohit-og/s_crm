@@ -46,7 +46,7 @@
                         <b-col md="6" sm="12">
                             <validation-provider
                                 name="Client"
-                                :rules="{ required: true }"
+                                :rules="{ required: !createNewClient }"
                                 v-slot="validationContext"
                             >
                                 <b-form-group :label="$t('Client') + ' ' + '*'">
@@ -63,7 +63,7 @@
                                                 ? true
                                                 : null
                                         "
-                                        :options="clients"
+                                        :options="clientOptions"
                                         label="name"
                                         :reduce="(option) => option.id"
                                         :placeholder="$t('Select_Client')"
@@ -73,6 +73,9 @@
                                     <b-form-invalid-feedback>{{
                                         validationContext.errors[0]
                                     }}</b-form-invalid-feedback>
+                                    <small class="text-muted">
+                                        {{ $t("Or_create_new_client_below") }}
+                                    </small>
                                 </b-form-group>
                             </validation-provider>
                         </b-col>
@@ -256,6 +259,169 @@
                             </b-form-group>
                         </b-col>
 
+                        <!-- New Client Creation Section -->
+                        <b-col md="12" sm="12" v-if="createNewClient">
+                            <b-card class="mt-3 border-primary">
+                                <h5 class="mb-3">
+                                    <i
+                                        class="i-User-Plus mr-2 text-primary"
+                                    ></i>
+                                    {{ $t("Create_New_Client") }}
+                                </h5>
+                                <b-row>
+                                    <!-- Client Name -->
+                                    <b-col md="6" sm="12">
+                                        <validation-provider
+                                            name="Client Name"
+                                            :rules="{
+                                                required: createNewClient,
+                                            }"
+                                            v-slot="validationContext"
+                                        >
+                                            <b-form-group
+                                                :label="
+                                                    $t('CustomerName') +
+                                                    ' ' +
+                                                    '*'
+                                                "
+                                            >
+                                                <b-form-input
+                                                    :state="
+                                                        getValidationState(
+                                                            validationContext
+                                                        )
+                                                    "
+                                                    aria-describedby="client-name-feedback"
+                                                    :placeholder="
+                                                        $t('CustomerName')
+                                                    "
+                                                    v-model="newClient.name"
+                                                ></b-form-input>
+                                                <b-form-invalid-feedback
+                                                    id="client-name-feedback"
+                                                    >{{
+                                                        validationContext
+                                                            .errors[0]
+                                                    }}</b-form-invalid-feedback
+                                                >
+                                            </b-form-group>
+                                        </validation-provider>
+                                    </b-col>
+
+                                    <!-- Client Email -->
+                                    <b-col md="6" sm="12">
+                                        <validation-provider
+                                            name="Client Email"
+                                            :rules="{
+                                                required: createNewClient,
+                                                email: createNewClient,
+                                            }"
+                                            v-slot="validationContext"
+                                        >
+                                            <b-form-group
+                                                :label="$t('Email') + ' ' + '*'"
+                                            >
+                                                <b-form-input
+                                                    type="email"
+                                                    :state="
+                                                        getValidationState(
+                                                            validationContext
+                                                        )
+                                                    "
+                                                    aria-describedby="client-email-feedback"
+                                                    :placeholder="$t('Email')"
+                                                    v-model="newClient.email"
+                                                ></b-form-input>
+                                                <b-form-invalid-feedback
+                                                    id="client-email-feedback"
+                                                    >{{
+                                                        validationContext
+                                                            .errors[0]
+                                                    }}</b-form-invalid-feedback
+                                                >
+                                            </b-form-group>
+                                        </validation-provider>
+                                    </b-col>
+
+                                    <!-- Client Phone -->
+                                    <b-col md="6" sm="12">
+                                        <b-form-group :label="$t('Phone')">
+                                            <b-form-input
+                                                :placeholder="$t('Phone')"
+                                                v-model="newClient.phone"
+                                            ></b-form-input>
+                                        </b-form-group>
+                                    </b-col>
+
+                                    <!-- Client Country -->
+                                    <b-col md="6" sm="12">
+                                        <b-form-group :label="$t('Country')">
+                                            <b-form-input
+                                                :placeholder="$t('Country')"
+                                                v-model="newClient.country"
+                                            ></b-form-input>
+                                        </b-form-group>
+                                    </b-col>
+
+                                    <!-- Client City -->
+                                    <b-col md="6" sm="12">
+                                        <b-form-group :label="$t('City')">
+                                            <b-form-input
+                                                :placeholder="$t('City')"
+                                                v-model="newClient.city"
+                                            ></b-form-input>
+                                        </b-form-group>
+                                    </b-col>
+
+                                    <!-- Client Tax Number -->
+                                    <b-col md="6" sm="12">
+                                        <b-form-group :label="$t('Tax_Number')">
+                                            <b-form-input
+                                                :placeholder="$t('Tax_Number')"
+                                                v-model="newClient.tax_number"
+                                            ></b-form-input>
+                                        </b-form-group>
+                                    </b-col>
+
+                                    <!-- Client Address -->
+                                    <b-col md="12" sm="12">
+                                        <b-form-group :label="$t('Adress')">
+                                            <b-form-textarea
+                                                rows="3"
+                                                :placeholder="$t('Adress')"
+                                                v-model="newClient.adresse"
+                                            ></b-form-textarea>
+                                        </b-form-group>
+                                    </b-col>
+
+                                    <!-- Cancel New Client -->
+                                    <b-col md="12" sm="12">
+                                        <b-button
+                                            variant="secondary"
+                                            size="sm"
+                                            @click="cancelNewClient"
+                                        >
+                                            <i class="i-Close"></i>
+                                            {{ $t("Cancel_New_Client") }}
+                                        </b-button>
+                                    </b-col>
+                                </b-row>
+                            </b-card>
+                        </b-col>
+
+                        <!-- Create New Client Button -->
+                        <b-col md="12" sm="12" v-if="!createNewClient">
+                            <b-button
+                                variant="outline-primary"
+                                size="sm"
+                                @click="showNewClientForm"
+                                class="mb-3"
+                            >
+                                <i class="i-User-Plus mr-1"></i>
+                                {{ $t("Create_New_Client") }}
+                            </b-button>
+                        </b-col>
+
                         <b-col md="12" class="mt-3">
                             <b-button
                                 variant="primary"
@@ -318,6 +484,16 @@ export default {
             pipelines: [],
             stages: [],
             agents: [],
+            createNewClient: false,
+            newClient: {
+                name: "",
+                email: "",
+                phone: "",
+                country: "",
+                city: "",
+                tax_number: "",
+                adresse: "",
+            },
             statusOptions: [
                 { label: "Open", value: "open" },
                 { label: "Closed Won", value: "closed_won" },
@@ -327,6 +503,13 @@ export default {
     },
     computed: {
         ...mapGetters(["currentUserPermissions", "currentUser"]),
+        clientOptions() {
+            // Add "Create New Client" option at the beginning
+            return [
+                { id: "new", name: `+ ${this.$t("Create_New_Client")}` },
+                ...this.clients,
+            ];
+        },
     },
     methods: {
         can(p) {
@@ -345,8 +528,86 @@ export default {
             }
         },
         //---------------------------------------- On Client Change
-        onClientChange() {
-            // Can add additional logic here if needed
+        onClientChange(value) {
+            if (value === "new") {
+                this.showNewClientForm();
+            } else {
+                this.createNewClient = false;
+            }
+        },
+        //---------------------------------------- Show New Client Form
+        showNewClientForm() {
+            this.createNewClient = true;
+            this.deal.client_id = "new";
+            // Reset new client form
+            this.newClient = {
+                name: "",
+                email: "",
+                phone: "",
+                country: "",
+                city: "",
+                tax_number: "",
+                adresse: "",
+            };
+        },
+        //---------------------------------------- Cancel New Client
+        cancelNewClient() {
+            this.createNewClient = false;
+            this.deal.client_id = null;
+            // Clear validation state by resetting the form validation
+            if (this.$refs.Create_Deal) {
+                this.$refs.Create_Deal.reset();
+            }
+            this.newClient = {
+                name: "",
+                email: "",
+                phone: "",
+                country: "",
+                city: "",
+                tax_number: "",
+                adresse: "",
+            };
+        },
+        //---------------------------------------- Create New Client
+        async Create_New_Client() {
+            try {
+                const response = await window.axios.post("clients", {
+                    name: this.newClient.name,
+                    email: this.newClient.email,
+                    phone: this.newClient.phone,
+                    country: this.newClient.country,
+                    city: this.newClient.city,
+                    tax_number: this.newClient.tax_number,
+                    adresse: this.newClient.adresse,
+                    is_royalty_eligible: 0,
+                    opening_balance: 0,
+                    credit_limit: 0,
+                });
+                const clientId = response.data.id || response.data.client?.id;
+                if (clientId) {
+                    // Add the new client to the clients list
+                    this.clients.push({
+                        id: clientId,
+                        name: this.newClient.name,
+                        email: this.newClient.email,
+                    });
+                    // Set the deal's client_id to the newly created client
+                    this.deal.client_id = clientId;
+                    // Hide the new client form
+                    this.createNewClient = false;
+                    return clientId;
+                }
+                throw new Error("Failed to create client");
+            } catch (error) {
+                console.error("Error creating client:", error);
+                this.makeToast(
+                    "danger",
+                    error.response?.data?.message ||
+                        this.$t("Failed_to_create_client"),
+                    this.$t("Error")
+                );
+                throw error;
+            }
         },
         //---------------------------------------- Fetch Clients
         async Fetch_Clients() {
@@ -409,22 +670,42 @@ export default {
             }
         },
         //------------- Submit Validation
-        Submit_Deal() {
-            this.$refs.Create_Deal.validate().then((success) => {
-                if (!success) {
-                    this.makeToast(
-                        "danger",
-                        this.$t("Please_fill_the_form_correctly"),
-                        this.$t("Failed")
-                    );
-                } else {
-                    if (this.isEditMode) {
-                        this.Update_Deal();
-                    } else {
-                        this.Create_Deal();
-                    }
+        async Submit_Deal() {
+            const isValid = await this.$refs.Create_Deal.validate();
+            if (!isValid) {
+                this.makeToast(
+                    "danger",
+                    this.$t("Please_fill_the_form_correctly"),
+                    this.$t("Failed")
+                );
+                return;
+            }
+
+            // If creating a new client, create it first
+            if (this.createNewClient || this.deal.client_id === "new") {
+                try {
+                    await this.Create_New_Client();
+                } catch (error) {
+                    // Error already handled in Create_New_Client
+                    return;
                 }
-            });
+            }
+
+            // Ensure client_id is set and is not "new"
+            if (!this.deal.client_id || this.deal.client_id === "new") {
+                this.makeToast(
+                    "danger",
+                    this.$t("Please_select_or_create_a_client"),
+                    this.$t("Validation_Error")
+                );
+                return;
+            }
+
+            if (this.isEditMode) {
+                this.Update_Deal();
+            } else {
+                this.Create_Deal();
+            }
         },
         //---------------------------------------- Create Deal
         Create_Deal() {
